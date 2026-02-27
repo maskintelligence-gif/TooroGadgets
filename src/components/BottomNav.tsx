@@ -1,6 +1,6 @@
-import { Home, ShoppingCart, Clock, MessageCircle } from 'lucide-react';
+import { Home, ShoppingCart, Clock, MessageCircle, LayoutGrid } from 'lucide-react';
 
-export type Tab = 'home' | 'cart' | 'chat' | 'history' | 'privacy' | 'terms' | 'contact' | 'shipping' | 'returns';
+export type Tab = 'home' | 'categories' | 'cart' | 'chat' | 'history' | 'privacy' | 'terms' | 'contact' | 'shipping' | 'returns';
 
 interface BottomNavProps {
   activeTab: Tab;
@@ -10,12 +10,12 @@ interface BottomNavProps {
 
 export function BottomNav({ activeTab, onTabChange, cartCount }: BottomNavProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-6 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] safe-area-bottom">
+    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 py-2 px-6 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] safe-area-bottom transition-colors">
       <div className="max-w-md mx-auto flex justify-between items-center">
         <button
           onClick={() => onTabChange('home')}
           className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${
-            activeTab === 'home' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
+            activeTab === 'home' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
           }`}
         >
           <Home size={24} strokeWidth={activeTab === 'home' ? 2.5 : 2} />
@@ -23,15 +23,25 @@ export function BottomNav({ activeTab, onTabChange, cartCount }: BottomNavProps)
         </button>
 
         <button
+          onClick={() => onTabChange('categories')}
+          className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${
+            activeTab === 'categories' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+          }`}
+        >
+          <LayoutGrid size={24} strokeWidth={activeTab === 'categories' ? 2.5 : 2} />
+          <span className="text-[10px] font-medium">Categories</span>
+        </button>
+
+        <button
           onClick={() => onTabChange('cart')}
           className={`relative flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${
-            activeTab === 'cart' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
+            activeTab === 'cart' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
           }`}
         >
           <div className="relative">
             <ShoppingCart size={24} strokeWidth={activeTab === 'cart' ? 2.5 : 2} />
             {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+              <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-900">
                 {cartCount}
               </span>
             )}
@@ -42,7 +52,7 @@ export function BottomNav({ activeTab, onTabChange, cartCount }: BottomNavProps)
         <button
           onClick={() => onTabChange('chat')}
           className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${
-            activeTab === 'chat' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
+            activeTab === 'chat' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
           }`}
         >
           <MessageCircle size={24} strokeWidth={activeTab === 'chat' ? 2.5 : 2} />
@@ -52,7 +62,7 @@ export function BottomNav({ activeTab, onTabChange, cartCount }: BottomNavProps)
         <button
           onClick={() => onTabChange('history')}
           className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${
-            activeTab === 'history' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
+            activeTab === 'history' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
           }`}
         >
           <Clock size={24} strokeWidth={activeTab === 'history' ? 2.5 : 2} />

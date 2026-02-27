@@ -1,5 +1,6 @@
+import React, { useState } from 'react';
 import { Product } from '../data/products';
-import { ShoppingCart, Star } from 'lucide-react';
+import { ShoppingCart, Star, Check } from 'lucide-react';
 
 interface ProductCardProps {
   key?: string | number;
@@ -10,13 +11,22 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onAddToCart, onClick, viewMode = 'grid' }: ProductCardProps) {
+  const [isAdded, setIsAdded] = useState(false);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAddToCart(product, false);
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 2000);
+  };
+
   if (viewMode === 'list') {
     return (
       <div
         onClick={() => onClick(product)}
-        className="group relative bg-white rounded-xl border border-gray-100 p-3 hover:shadow-md transition-all flex items-center gap-4 cursor-pointer"
+        className="group relative bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-3 hover:shadow-md transition-all flex items-center gap-4 cursor-pointer"
       >
-        <div className="w-20 h-20 flex-shrink-0 bg-gray-50 rounded-lg p-2 flex items-center justify-center">
+        <div className="w-20 h-20 flex-shrink-0 bg-gray-50 dark:bg-gray-800 rounded-lg p-2 flex items-center justify-center">
           <img
             src={product.image}
             alt={product.name}
@@ -30,12 +40,12 @@ export function ProductCard({ product, onAddToCart, onClick, viewMode = 'grid' }
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{product.category}</span>
             {product.isNew && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 uppercase">New</span>}
           </div>
-          <h3 className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
             {product.name}
           </h3>
           <div className="flex items-center gap-1 text-xs text-amber-500 mt-1">
             <Star className="fill-current w-3 h-3" />
-            <span className="font-medium text-gray-700">{product.rating}</span>
+            <span className="font-medium text-gray-700 dark:text-gray-300">{product.rating}</span>
           </div>
         </div>
 
@@ -43,21 +53,20 @@ export function ProductCard({ product, onAddToCart, onClick, viewMode = 'grid' }
           <div className="flex flex-col items-end">
             {product.originalPrice && (
               <span className="text-xs text-gray-400 line-through">
-                ${product.originalPrice.toFixed(2)}
+                UGX {product.originalPrice.toLocaleString()}
               </span>
             )}
-            <span className="text-base font-bold text-gray-900">
-              ${product.price.toFixed(2)}
+            <span className="text-base font-bold text-gray-900 dark:text-white">
+              UGX {product.price.toLocaleString()}
             </span>
           </div>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddToCart(product, false);
-            }}
-            className="p-2 bg-gray-900 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
+            onClick={handleAddToCart}
+            className={`p-2 rounded-lg transition-colors shadow-sm ${
+              isAdded ? 'bg-emerald-500 text-white' : 'bg-gray-900 dark:bg-gray-800 text-white hover:bg-blue-600 dark:hover:bg-blue-600'
+            }`}
           >
-            <ShoppingCart size={16} />
+            {isAdded ? <Check size={16} /> : <ShoppingCart size={16} />}
           </button>
         </div>
       </div>
@@ -67,7 +76,7 @@ export function ProductCard({ product, onAddToCart, onClick, viewMode = 'grid' }
   return (
     <div
       onClick={() => onClick(product)}
-      className="group relative bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col cursor-pointer"
+      className="group relative bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col cursor-pointer"
     >
       {/* Badges */}
       <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
@@ -79,7 +88,7 @@ export function ProductCard({ product, onAddToCart, onClick, viewMode = 'grid' }
       </div>
 
       {/* Image Container */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-gray-50 p-4 flex items-center justify-center">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gray-50 dark:bg-gray-800 p-4 flex items-center justify-center">
         <img
           src={product.image}
           alt={product.name}
@@ -94,11 +103,11 @@ export function ProductCard({ product, onAddToCart, onClick, viewMode = 'grid' }
           <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">{product.category}</span>
           <div className="flex items-center gap-0.5 text-[10px] text-amber-500">
             <Star className="fill-current w-3 h-3" />
-            <span className="font-bold text-gray-700">{product.rating}</span>
+            <span className="font-bold text-gray-700 dark:text-gray-300">{product.rating}</span>
           </div>
         </div>
         
-        <h2 className="text-xs font-bold text-gray-900 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors leading-tight min-h-[2rem]">
+        <h2 className="text-xs font-bold text-gray-900 dark:text-white line-clamp-2 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight min-h-[2rem]">
           {product.name}
         </h2>
         
@@ -106,21 +115,20 @@ export function ProductCard({ product, onAddToCart, onClick, viewMode = 'grid' }
           <div className="flex flex-col">
             {product.originalPrice && (
               <span className="text-[10px] text-gray-400 line-through">
-                ${product.originalPrice.toFixed(2)}
+                UGX {product.originalPrice.toLocaleString()}
               </span>
             )}
-            <span className="text-sm font-bold text-gray-900">
-              ${product.price.toFixed(2)}
+            <span className="text-sm font-bold text-gray-900 dark:text-white">
+              UGX {product.price.toLocaleString()}
             </span>
           </div>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddToCart(product, false);
-            }}
-            className="p-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-900 hover:text-white transition-colors"
+            onClick={handleAddToCart}
+            className={`p-2 rounded-lg transition-colors ${
+              isAdded ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-900 dark:hover:bg-gray-700 hover:text-white'
+            }`}
           >
-            <ShoppingCart size={16} />
+            {isAdded ? <Check size={16} /> : <ShoppingCart size={16} />}
           </button>
         </div>
       </div>
