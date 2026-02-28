@@ -21,13 +21,25 @@ jobs:
         node-version: '20.x'
         cache: 'npm'
     
+    # Debug step: Check what's in package.json
+    - name: Check dependencies
+      run: |
+        echo "Checking package.json for supabase..."
+        cat package.json | grep -A 5 dependencies
+    
+    # More forgiving: Use npm install instead of npm ci
     - name: Install dependencies
-      run: npm ci
+      run: npm install  # Changed from npm ci
+    
+    # Alternative: If npm install is too slow, try ci with fallback
+    # - name: Install dependencies
+    #   run: |
+    #     npm ci || npm install
     
     - name: Build
       run: npm run build
       env:
-        PUBLIC_URL: /TooroGadgets  # Replace with your repo name
+        PUBLIC_URL: /TooroGadgets
         CI: false
     
     - name: Deploy to GitHub Pages
