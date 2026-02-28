@@ -1,0 +1,28 @@
+name: NPM Install
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'  # or '18', '22', etc.
+          cache: 'npm'        # caches node_modules for faster runs
+      
+      - name: Install dependencies
+        run: npm install
+      
+      # Optional: Verify installation
+      - name: List installed packages
+        run: npm list --depth=0
