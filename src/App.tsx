@@ -13,7 +13,7 @@ import { ContactUs } from './components/ContactUs';
 import { ShippingPolicy } from './components/ShippingPolicy';
 import { ReturnsExchanges } from './components/ReturnsExchanges';
 import { Category, categories } from './data/products';
-// import { Product } from './data/products';
+import { Product } from './data/products';
 import { LayoutGrid, List, ArrowLeft } from 'lucide-react';
 import { useProducts } from './hooks/useProducts';
 
