@@ -12,10 +12,11 @@ interface CartProps {
   onUpdateQuantity: (id: string, quantity: number) => void;
   onRemoveItem: (id: string) => void;
   onProductClick: (product: Product) => void;
+  onCheckout?: () => void;
   variant?: 'modal' | 'inline';
 }
 
-export function Cart({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem, onProductClick, variant = 'modal' }: CartProps) {
+export function Cart({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem, onProductClick, onCheckout, variant = 'modal' }: CartProps) {
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   if (!isOpen && variant === 'modal') return null;
@@ -129,10 +130,13 @@ export function Cart({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem, o
             <p>UGX {total.toLocaleString()}</p>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            Shipping and taxes calculated at checkout.
+            Cash on delivery or in-store pickup available.
           </p>
-          <button className="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 py-4 rounded-xl font-bold text-lg hover:bg-black dark:hover:bg-gray-100 transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
-            Checkout Now
+          <button
+            onClick={onCheckout}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+          >
+            Proceed to Checkout
             <ArrowRight className="w-5 h-5" />
           </button>
         </div>
