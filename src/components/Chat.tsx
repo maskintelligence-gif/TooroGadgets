@@ -163,12 +163,19 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default');
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(true);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if ('Notification' in window) setNotifPermission(Notification.permission);
+    if ('Notification' in window) {
+      setNotifPermission(Notification.permission);
+      // Hide prompt if already granted or denied
+      if (Notification.permission !== 'default') {
+        setShowNotificationPrompt(false);
+      }
+    }
   }, []);
 
   // Lock body scroll when chat is open — prevents outer page from scrolling
@@ -210,18 +217,42 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
 
   const requestNotifications = async () => {
     if (!('Notification' in window)) return;
-    const result = await Notification.requestPermission();
-    setNotifPermission(result);
+    
+    try {
+      const result = await Notification.requestPermission();
+      setNotifPermission(result);
+      
+      // Show a test notification if granted
+      if (result === 'granted') {
+        setShowNotificationPrompt(false);
+        // Optional: Show a test notification to confirm it works
+        new Notification('✅ Notifications Enabled', {
+          body: 'You will now receive notifications when we reply.',
+          icon: '/favicon.ico',
+        });
+      } else {
+        // If denied, we might want to show a message
+        setShowNotificationPrompt(false);
+      }
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+    }
   };
 
   const showNotification = useCallback((content: string) => {
     if (notifPermission !== 'granted') return;
     if (isActive && document.visibilityState === 'visible') return;
-    new Notification('TooroGadgets Support', {
-      body: content.length > 80 ? content.slice(0, 80) + '…' : content,
-      icon: '/favicon.ico',
-      tag: 'tg-chat',
-    });
+    
+    try {
+      new Notification('TooroGadgets Support', {
+        body: content.length > 80 ? content.slice(0, 80) + '…' : content,
+        icon: '/favicon.ico',
+        tag: 'tg-chat',
+        requireInteraction: true, // Keep notification until user interacts
+      });
+    } catch (error) {
+      console.error('Error showing notification:', error);
+    }
   }, [notifPermission, isActive]);
 
   // Real-time
@@ -290,7 +321,7 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
   return (
     <div className="flex flex-col items-center w-full px-0" style={{height: 'calc(100dvh - 130px)'}}>
       <div className="w-full max-w-lg flex flex-col h-full">
-        {/* Header */}
+        {/* Header - Fixed at top */}
         <div className="flex items-center gap-3 px-4 py-3 rounded-t-2xl flex-shrink-0
           bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm">
           <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-blue-500/20">
@@ -314,9 +345,15 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
           )}
         </div>
 
-        {/* Messages - Now takes full available space */}
-        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 py-3
-          bg-gray-50 dark:bg-gray-950 border-x border-gray-100 dark:border-gray-800">
+        {/* Messages - Takes remaining space and scrolls */}
+        <div 
+          ref={messagesContainerRef} 
+          className="flex-1 overflow-y-auto px-4 py-3
+            bg-gray-50 dark:bg-gray-950 border-x border-gray-100 dark:border-gray-800"
+          style={{ 
+            maxHeight: 'calc(100% - 180px)', // Adjust based on header + input height
+          }}
+        >
           {loading ? (
             <div className="flex justify-center items-center h-full">
               <Loader2 size={24} className="animate-spin text-blue-500" />
@@ -382,58 +419,65 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
           <div ref={endRef} />
         </div>
 
-        {/* Notification prompt - Now above input */}
-        {'Notification' in window && notifPermission === 'default' && (
-          <button onClick={requestNotifications}
-            className="flex items-center gap-2.5 px-4 py-2.5 flex-shrink-0 transition-all active:scale-[0.99]
-              bg-blue-50 dark:bg-blue-900/20 border-x border-blue-100 dark:border-blue-800/50">
-            <Bell size={14} className="text-blue-600 flex-shrink-0" />
-            <p className="text-xs text-blue-700 dark:text-blue-300 flex-1">Enable notifications to get alerted when we reply</p>
-            <span className="text-xs font-semibold text-blue-600">Enable →</span>
-          </button>
-        )}
-
-        {/* Quick replies - Now above input */}
-        <div className="flex gap-2 overflow-x-auto px-4 py-2 flex-shrink-0 no-scrollbar
-          bg-white dark:bg-gray-900 border-x border-gray-100 dark:border-gray-800">
-          {['What are your prices? 💰', 'Do you deliver? 🛵', 'Is this in stock? 📦', 'Payment options? 💳'].map(r => (
-            <button key={r} onClick={() => { 
-              setInput(r); 
-              // Don't auto-focus when clicking quick replies
-            }}
-              className="flex-shrink-0 text-xs px-3 py-1.5 rounded-full transition-all active:scale-95
-                bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300
-                hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600
-                border border-gray-200 dark:border-gray-700">
-              {r}
+        {/* Bottom section - Fixed at bottom */}
+        <div className="flex-shrink-0">
+          {/* Notification prompt */}
+          {'Notification' in window && notifPermission === 'default' && showNotificationPrompt && (
+            <button 
+              onClick={async () => {
+                await requestNotifications();
+              }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 transition-all active:scale-[0.99]
+                bg-blue-50 dark:bg-blue-900/20 border-x border-blue-100 dark:border-blue-800/50 hover:bg-blue-100 dark:hover:bg-blue-900/40"
+            >
+              <Bell size={14} className="text-blue-600 flex-shrink-0" />
+              <p className="text-xs text-blue-700 dark:text-blue-300 flex-1 text-left">Enable notifications to get alerted when we reply</p>
+              <span className="text-xs font-semibold text-blue-600">Enable →</span>
             </button>
-          ))}
-        </div>
+          )}
 
-        {/* Input - Now at the very bottom */}
-        <div className="flex gap-2 px-4 py-3 flex-shrink-0 rounded-b-2xl
-          bg-white dark:bg-gray-900 border border-t-0 border-gray-100 dark:border-gray-800">
-          <input 
-            ref={inputRef} 
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
-            placeholder="Message TooroGadgets…"
-            onClick={(e) => {
-              // Let the user manually click to show keyboard
-              e.currentTarget.focus();
-            }}
-            className="flex-1 px-4 py-2.5 rounded-xl text-sm focus:outline-none transition-all
-              bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white
-              border border-gray-200 dark:border-gray-700
-              focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10" />
-          <button onClick={send} disabled={!input.trim() || sending}
-            className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-40"
-            style={{ background: input.trim() ? '#2563eb' : '#e5e7eb' }}>
-            {sending
-              ? <Loader2 size={16} className="animate-spin text-white" />
-              : <Send size={16} className={input.trim() ? 'text-white' : 'text-gray-400'} />}
-          </button>
+          {/* Quick replies */}
+          <div className="flex gap-2 overflow-x-auto px-4 py-2 no-scrollbar
+            bg-white dark:bg-gray-900 border-x border-gray-100 dark:border-gray-800">
+            {['What are your prices? 💰', 'Do you deliver? 🛵', 'Is this in stock? 📦', 'Payment options? 💳'].map(r => (
+              <button key={r} onClick={() => { 
+                setInput(r); 
+                // Don't auto-focus when clicking quick replies
+              }}
+                className="flex-shrink-0 text-xs px-3 py-1.5 rounded-full transition-all active:scale-95
+                  bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300
+                  hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600
+                  border border-gray-200 dark:border-gray-700">
+                {r}
+              </button>
+            ))}
+          </div>
+
+          {/* Input - Now at the very bottom */}
+          <div className="flex gap-2 px-4 py-3 rounded-b-2xl
+            bg-white dark:bg-gray-900 border border-t-0 border-gray-100 dark:border-gray-800">
+            <input 
+              ref={inputRef} 
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
+              placeholder="Message TooroGadgets…"
+              onClick={(e) => {
+                // Let the user manually click to show keyboard
+                e.currentTarget.focus();
+              }}
+              className="flex-1 px-4 py-2.5 rounded-xl text-sm focus:outline-none transition-all
+                bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white
+                border border-gray-200 dark:border-gray-700
+                focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10" />
+            <button onClick={send} disabled={!input.trim() || sending}
+              className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-40"
+              style={{ background: input.trim() ? '#2563eb' : '#e5e7eb' }}>
+              {sending
+                ? <Loader2 size={16} className="animate-spin text-white" />
+                : <Send size={16} className={input.trim() ? 'text-white' : 'text-gray-400'} />}
+            </button>
+          </div>
         </div>
       </div>
     </div>
