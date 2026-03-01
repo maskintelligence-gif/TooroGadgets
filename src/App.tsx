@@ -31,6 +31,7 @@ export default function App() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [chatUnread, setChatUnread] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [returnToCart, setReturnToCart] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -296,7 +297,7 @@ export default function App() {
               </div>
             )}
 
-            {activeTab === 'chat' && <div className="pt-6"><Chat /></div>}
+            {activeTab === 'chat' && <div className="pt-6"><Chat isActive={activeTab === 'chat'} onUnreadChange={setChatUnread} /></div>}
             {activeTab === 'history' && <div className="pt-6"><OrderHistory /></div>}
             {activeTab === 'privacy' && <div className="pt-6"><PrivacyPolicy onBack={handleBackToFooter} /></div>}
             {activeTab === 'terms' && <div className="pt-6"><TermsOfService onBack={handleBackToFooter} /></div>}
@@ -359,7 +360,7 @@ export default function App() {
       )}
 
       {!selectedProduct && (
-        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} cartCount={cartCount} />
+        <BottomNav activeTab={activeTab} onTabChange={(tab) => { if (tab === 'chat') setChatUnread(0); setActiveTab(tab); }} cartCount={cartCount} chatUnread={chatUnread} />
       )}
 
       {toastMessage && (
