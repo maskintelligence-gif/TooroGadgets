@@ -178,7 +178,7 @@ export function Chat() {
 
   if (initializing) {
     return (
-      <div className="flex items-center justify-center py-24">
+      <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <Loader2 size={32} className="animate-spin text-blue-600 mx-auto mb-3" />
           <p className="text-gray-500 text-sm">Connecting to chat...</p>
@@ -188,24 +188,28 @@ export function Chat() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 h-screen flex flex-col bg-white dark:bg-gray-900">
-      <div className="flex-none mb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <MessageCircle className="w-5 h-5" />Chat with Us
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">We typically reply within a few minutes.</p>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-xs text-gray-400">Online</span>
+    <div className="h-screen flex flex-col bg-white dark:bg-gray-900">
+      {/* Header */}
+      <div className="flex-none px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+        <div className="max-w-3xl mx-auto w-full">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <MessageCircle className="w-5 h-5" />Chat with Us
+              </h1>
+              <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">We typically reply within a few minutes.</p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-xs text-gray-400">Online</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      {/* Messages Area - This is the only thing that scrolls */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="max-w-3xl mx-auto w-full px-4 py-4 space-y-3">
           {/* Welcome message */}
           {messages.length === 0 && (
             <div className="flex justify-start">
@@ -235,8 +239,11 @@ export function Chat() {
           ))}
           <div ref={messagesEndRef} />
         </div>
+      </div>
 
-        <div className="flex-none p-4 border-t border-gray-200 dark:border-gray-700">
+      {/* Input Area - Fixed at bottom */}
+      <div className="flex-none px-4 py-3 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+        <div className="max-w-3xl mx-auto w-full">
           <div className="flex gap-2">
             <input
               ref={inputRef}
@@ -245,7 +252,7 @@ export function Chat() {
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
               placeholder="Type your message..."
-              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
+              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
             />
             <button
               onClick={handleSend}
