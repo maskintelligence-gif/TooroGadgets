@@ -170,6 +170,14 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
     if ('Notification' in window) setNotifPermission(Notification.permission);
   }, []);
 
+  // Lock body scroll when chat is open — prevents outer page from scrolling
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+
+
   const scrollDown = (smooth = true) => {
     endRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant' });
   };
@@ -268,7 +276,8 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
 
   if (!identity) {
     return (
-      <div className="max-w-lg mx-auto h-[calc(100vh-140px)]">
+      <div className="flex flex-col items-center w-full px-0" style={{height: 'calc(100dvh - 130px)'}}>
+      <div className="w-full max-w-lg flex flex-col h-full">
         <IdentitySetup onDone={setIdentity} />
       </div>
     );
@@ -277,7 +286,8 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
   const grouped = groupByDate(messages);
 
   return (
-    <div className="max-w-lg mx-auto flex flex-col h-[calc(100vh-130px)]">
+    <div className="flex flex-col items-center w-full px-0" style={{height: 'calc(100dvh - 130px)'}}>
+      <div className="w-full max-w-lg flex flex-col h-full">
 
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 rounded-t-2xl flex-shrink-0
