@@ -29,7 +29,7 @@ export const products: Product[] = [
   {
     id: 'p2',
     name: 'Sony WH-1000XM5 Wireless Headphones',
-    description: 'Industry-leading noise cancellation with Auto NC Optimizer, 30-hour battery life.',
+    description: 'Industry-leading noise cancellation with Auto NC Optimizer, 6-hour battery life.',
     price: 49000,
     originalPrice: 54000,
     category: 'Audio',
