@@ -165,6 +165,7 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default');
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if ('Notification' in window) setNotifPermission(Notification.permission);
@@ -266,9 +267,11 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
         updated_at: new Date().toISOString(),
         unread_count: 1,
       }).eq('conversation_id', identity.conversation_id);
+      
+      // Don't automatically focus the input after sending
+      // This prevents the keyboard from auto-triggering
     } finally {
       setSending(false);
-      inputRef.current?.focus();
     }
   };
 
@@ -311,8 +314,8 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
           )}
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-3
+        {/* Messages - Now takes full available space */}
+        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 py-3
           bg-gray-50 dark:bg-gray-950 border-x border-gray-100 dark:border-gray-800">
           {loading ? (
             <div className="flex justify-center items-center h-full">
@@ -379,7 +382,7 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
           <div ref={endRef} />
         </div>
 
-        {/* Notification prompt */}
+        {/* Notification prompt - Now above input */}
         {'Notification' in window && notifPermission === 'default' && (
           <button onClick={requestNotifications}
             className="flex items-center gap-2.5 px-4 py-2.5 flex-shrink-0 transition-all active:scale-[0.99]
@@ -390,11 +393,14 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
           </button>
         )}
 
-        {/* Quick replies */}
+        {/* Quick replies - Now above input */}
         <div className="flex gap-2 overflow-x-auto px-4 py-2 flex-shrink-0 no-scrollbar
           bg-white dark:bg-gray-900 border-x border-gray-100 dark:border-gray-800">
           {['What are your prices? 💰', 'Do you deliver? 🛵', 'Is this in stock? 📦', 'Payment options? 💳'].map(r => (
-            <button key={r} onClick={() => { setInput(r); inputRef.current?.focus(); }}
+            <button key={r} onClick={() => { 
+              setInput(r); 
+              // Don't auto-focus when clicking quick replies
+            }}
               className="flex-shrink-0 text-xs px-3 py-1.5 rounded-full transition-all active:scale-95
                 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300
                 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600
@@ -404,13 +410,19 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
           ))}
         </div>
 
-        {/* Input */}
+        {/* Input - Now at the very bottom */}
         <div className="flex gap-2 px-4 py-3 flex-shrink-0 rounded-b-2xl
           bg-white dark:bg-gray-900 border border-t-0 border-gray-100 dark:border-gray-800">
-          <input ref={inputRef} value={input}
+          <input 
+            ref={inputRef} 
+            value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
             placeholder="Message TooroGadgets…"
+            onClick={(e) => {
+              // Let the user manually click to show keyboard
+              e.currentTarget.focus();
+            }}
             className="flex-1 px-4 py-2.5 rounded-xl text-sm focus:outline-none transition-all
               bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white
               border border-gray-200 dark:border-gray-700
