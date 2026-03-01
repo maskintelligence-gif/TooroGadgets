@@ -171,7 +171,6 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
       setNotifPermission(Notification.permission);
       // Auto-trigger notification permission if not decided yet
       if (Notification.permission === 'default') {
-        // Small delay to not interrupt the initial load
         setTimeout(() => {
           requestNotifications();
         }, 1000);
@@ -179,41 +178,70 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
     }
   }, []);
 
-  // Lock body scroll when chat is open — prevents outer page from scrolling
+  // Lock body scroll when chat is open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
   }, []);
 
   const scrollDown = (smooth = true) => {
-    endRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant' });
+    setTimeout(() => {
+      endRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', block: 'nearest' });
+    }, 100);
   };
 
   const loadMessages = useCallback(async (convId: string) => {
     setLoading(true);
-    const { data } = await supabase.from('messages').select('*')
-      .eq('conversation_id', convId).order('created_at', { ascending: true }).limit(100);
-    setMessages((data as Message[]) ?? []);
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', convId)
+      .order('created_at', { ascending: true });
+    
+    if (error) {
+      console.error('Error loading messages:', error);
+    } else {
+      setMessages(data as Message[]);
+    }
     setLoading(false);
   }, []);
 
   const markRead = useCallback(async (convId: string) => {
-    await supabase.from('messages').update({ read_at: new Date().toISOString() })
-      .eq('conversation_id', convId).eq('sender_type', 'admin').is('read_at', null);
-    await supabase.from('conversations').update({ unread_count: 0 }).eq('conversation_id', convId);
-    onUnreadChange(0);
+    try {
+      await supabase
+        .from('messages')
+        .update({ read_at: new Date().toISOString() })
+        .eq('conversation_id', convId)
+        .eq('sender_type', 'admin')
+        .is('read_at', null);
+      
+      await supabase
+        .from('conversations')
+        .update({ unread_count: 0 })
+        .eq('conversation_id', convId);
+      
+      onUnreadChange(0);
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+    }
   }, [onUnreadChange]);
 
   useEffect(() => {
-    if (identity) loadMessages(identity.conversation_id);
+    if (identity) {
+      loadMessages(identity.conversation_id);
+    }
   }, [identity?.conversation_id]);
 
   useEffect(() => {
-    if (!loading && messages.length > 0) scrollDown(false);
-  }, [loading]);
+    if (!loading && messages.length > 0) {
+      scrollDown(false);
+    }
+  }, [loading, messages.length]);
 
   useEffect(() => {
-    if (isActive && identity) markRead(identity.conversation_id);
+    if (isActive && identity) {
+      markRead(identity.conversation_id);
+    }
   }, [isActive, identity?.conversation_id]);
 
   const requestNotifications = async () => {
@@ -223,7 +251,6 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
       const result = await Notification.requestPermission();
       setNotifPermission(result);
       
-      // Show a test notification if granted
       if (result === 'granted') {
         new Notification('✅ Notifications Enabled', {
           body: 'You will now receive notifications when we reply.',
@@ -251,49 +278,88 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
     }
   }, [notifPermission, isActive]);
 
-  // Real-time
+  // Real-time subscription
   useEffect(() => {
     if (!identity) return;
-    const ch = supabase.channel(`customer-chat-${identity.conversation_id}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'messages',
-        filter: `conversation_id=eq.${identity.conversation_id}`,
-      }, (payload) => {
-        const msg = payload.new as Message;
-        setMessages(prev => prev.find(m => m.message_id === msg.message_id) ? prev : [...prev, msg]);
 
-        if (msg.sender_type === 'admin') {
-          if (isActive && document.visibilityState === 'visible') {
-            supabase.from('messages').update({ read_at: new Date().toISOString() })
-              .eq('message_id', msg.message_id).then(() => {});
-          } else {
-            onUnreadChange(1);
-            showNotification(msg.content);
+    const subscription = supabase
+      .channel(`messages:${identity.conversation_id}`)
+      .on('postgres_changes', 
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'messages',
+          filter: `conversation_id=eq.${identity.conversation_id}`
+        }, 
+        (payload) => {
+          const newMessage = payload.new as Message;
+          
+          // Check if message already exists
+          setMessages(prev => {
+            if (prev.some(msg => msg.message_id === newMessage.message_id)) {
+              return prev;
+            }
+            return [...prev, newMessage];
+          });
+
+          // Handle admin messages
+          if (newMessage.sender_type === 'admin') {
+            if (isActive && document.visibilityState === 'visible') {
+              // Mark as read immediately
+              supabase
+                .from('messages')
+                .update({ read_at: new Date().toISOString() })
+                .eq('message_id', newMessage.message_id)
+                .then(() => {});
+            } else {
+              onUnreadChange(1);
+              showNotification(newMessage.content);
+            }
           }
+          
+          scrollDown();
         }
-        setTimeout(() => scrollDown(), 80);
-      })
+      )
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, [identity?.conversation_id, isActive, showNotification, onUnreadChange]);
 
   const send = async () => {
     if (!input.trim() || sending || !identity) return;
+    
     const text = input.trim();
     setInput('');
     setSending(true);
+    
     try {
-      await supabase.from('messages').insert({
-        conversation_id: identity.conversation_id,
-        sender_type: 'customer',
-        message_type: 'text',
-        content: text,
-      });
-      await supabase.from('conversations').update({
-        last_message_preview: text.slice(0, 100),
-        updated_at: new Date().toISOString(),
-        unread_count: 1,
-      }).eq('conversation_id', identity.conversation_id);
+      const { error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: identity.conversation_id,
+          sender_type: 'customer',
+          message_type: 'text',
+          content: text,
+        });
+
+      if (messageError) throw messageError;
+
+      const { error: conversationError } = await supabase
+        .from('conversations')
+        .update({
+          last_message: text,
+          last_message_time: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('conversation_id', identity.conversation_id);
+
+      if (conversationError) throw conversationError;
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Optionally show error to user
     } finally {
       setSending(false);
     }
@@ -301,7 +367,7 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
 
   if (!identity) {
     return (
-      <div className="flex flex-col items-center w-full px-0" style={{height: 'calc(100dvh - 130px)'}}>
+      <div className="flex flex-col items-center w-full h-full px-0">
         <div className="w-full max-w-lg flex flex-col h-full">
           <IdentitySetup onDone={setIdentity} />
         </div>
@@ -312,139 +378,136 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
   const grouped = groupByDate(messages);
 
   return (
-    <div className="flex flex-col items-center w-full px-0" style={{height: 'calc(100dvh - 130px)'}}>
-      <div className="w-full max-w-lg flex flex-col h-full">
-        {/* Header - Fixed at top */}
-        <div className="flex items-center gap-3 px-4 py-3 rounded-t-2xl flex-shrink-0
-          bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm">
-          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-blue-500/20">
+    <div className="flex flex-col items-center w-full h-full px-0">
+      <div className="w-full max-w-lg flex flex-col h-full bg-white dark:bg-gray-900">
+        {/* Header */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
             <Zap size={18} className="text-white" fill="white" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm text-gray-900 dark:text-white">TooroGadgets Support</p>
             <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <p className="text-xs text-gray-500 dark:text-gray-400">Online · replies in minutes</p>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <p className="text-xs text-gray-500 dark:text-gray-400">Online</p>
             </div>
           </div>
           {'Notification' in window && (
-            <button onClick={requestNotifications}
-              className={`p-2 rounded-xl transition-all active:scale-90 ${notifPermission === 'granted' ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
-              title={notifPermission === 'granted' ? 'Notifications on' : 'Enable notifications'}>
-              {notifPermission === 'granted'
-                ? <Bell size={16} className="text-blue-600 dark:text-blue-400" />
-                : <BellOff size={16} className="text-gray-400" />}
+            <button 
+              onClick={requestNotifications}
+              className={`p-2 rounded-full ${notifPermission === 'granted' ? 'bg-blue-100 dark:bg-blue-900/30' : ''}`}
+            >
+              {notifPermission === 'granted' 
+                ? <Bell size={18} className="text-blue-600 dark:text-blue-400" />
+                : <BellOff size={18} className="text-gray-400" />
+              }
             </button>
           )}
         </div>
 
-        {/* Messages - Takes all remaining space */}
-        <div className="flex-1 overflow-y-auto px-4 py-3
-          bg-gray-50 dark:bg-gray-950 border-x border-gray-100 dark:border-gray-800">
+        {/* Messages Area - Takes remaining space */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50 dark:bg-gray-950">
           {loading ? (
             <div className="flex justify-center items-center h-full">
               <Loader2 size={24} className="animate-spin text-blue-500" />
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-3 py-10">
-              <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                <MessageCircle size={24} className="text-blue-500" />
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3">
+                <MessageCircle size={24} className="text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="text-center">
-                <p className="font-semibold text-gray-800 dark:text-white text-sm">Hi {identity.name}! 👋</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Send us a message and we'll reply shortly.</p>
-              </div>
+              <p className="text-gray-600 dark:text-gray-300 font-medium">Hi {identity.name}! 👋</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1">
+                Send a message to start chatting
+              </p>
             </div>
           ) : (
-            <div className="space-y-0.5">
-              {grouped.map(group => (
-                <div key={group.date}>
-                  {/* Date divider */}
-                  <div className="flex items-center gap-3 my-4">
-                    <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
-                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{group.date}</span>
-                    <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+            <div className="space-y-4">
+              {grouped.map((group, groupIndex) => (
+                <div key={groupIndex}>
+                  <div className="flex justify-center mb-4">
+                    <span className="text-xs bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-3 py-1 rounded-full">
+                      {group.date}
+                    </span>
                   </div>
-
-                  {group.messages.map((msg, i) => {
+                  {group.messages.map((msg) => {
                     const isCustomer = msg.sender_type === 'customer';
-                    const nextMsg = group.messages[i + 1];
-                    const isLastInGroup = !nextMsg || nextMsg.sender_type !== msg.sender_type;
-
                     return (
-                      <div key={msg.message_id} className={`flex mb-0.5 ${isCustomer ? 'justify-end' : 'justify-start'}`}>
+                      <div
+                        key={msg.message_id}
+                        className={`flex mb-2 ${isCustomer ? 'justify-end' : 'justify-start'}`}
+                      >
                         {!isCustomer && (
-                          <div className={`w-6 h-6 rounded-full bg-blue-600 flex-shrink-0 mr-2 self-end mb-1
-                            flex items-center justify-center ${isLastInGroup ? 'opacity-100' : 'opacity-0'}`}>
-                            <Zap size={10} className="text-white" fill="white" />
+                          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2 flex-shrink-0">
+                            <Zap size={12} className="text-white" fill="white" />
                           </div>
                         )}
-                        <div className={`max-w-[75%] ${!isCustomer && !isLastInGroup ? 'ml-8' : ''}`}>
-                          <div className={`rounded-2xl px-4 py-2.5 ${
-                            isCustomer
-                              ? 'bg-blue-600 text-white rounded-br-md'
-                              : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md border border-gray-100 dark:border-gray-700 shadow-sm'
-                          } ${isLastInGroup ? '' : isCustomer ? 'rounded-br-2xl' : 'rounded-bl-2xl'}`}>
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                        <div className={`max-w-[70%] ${isCustomer ? 'mr-2' : ''}`}>
+                          <div
+                            className={`rounded-2xl px-4 py-2 ${
+                              isCustomer
+                                ? 'bg-blue-600 text-white rounded-br-none'
+                                : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-bl-none'
+                            }`}
+                          >
+                            <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                           </div>
-                          {isLastInGroup && (
-                            <p className={`text-[10px] mt-1 px-1 text-gray-400 dark:text-gray-500 ${isCustomer ? 'text-right' : ''}`}>
-                              {formatTime(msg.created_at)}
-                              {isCustomer && (msg.read_at
-                                ? <span className="ml-1 text-blue-500"> ✓✓</span>
-                                : <span className="ml-1 text-gray-300 dark:text-gray-600"> ✓</span>)}
-                            </p>
-                          )}
+                          <div className={`flex items-center gap-1 mt-1 text-[10px] text-gray-400 ${isCustomer ? 'justify-end' : 'justify-start'}`}>
+                            <span>{formatTime(msg.created_at)}</span>
+                            {isCustomer && (
+                              <span>{msg.read_at ? '✓✓' : '✓'}</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
               ))}
+              <div ref={endRef} />
             </div>
           )}
-          <div ref={endRef} />
         </div>
 
-        {/* Quick replies */}
-        <div className="flex gap-2 overflow-x-auto px-4 py-2 no-scrollbar flex-shrink-0
-          bg-white dark:bg-gray-900 border-x border-gray-100 dark:border-gray-800">
-          {['What are your prices? 💰', 'Do you deliver? 🛵', 'Is this in stock? 📦', 'Payment options? 💳'].map(r => (
-            <button key={r} onClick={() => { 
-              setInput(r); 
-            }}
-              className="flex-shrink-0 text-xs px-3 py-1.5 rounded-full transition-all active:scale-95
-                bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300
-                hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600
-                border border-gray-200 dark:border-gray-700">
-              {r}
+        {/* Quick Replies */}
+        <div className="px-4 py-2 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {['Prices?', 'Delivery?', 'Stock?', 'Payment?'].map((text) => (
+              <button
+                key={text}
+                onClick={() => setInput(text)}
+                className="flex-shrink-0 text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                {text}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Input Area */}
+        <div className="px-4 py-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+          <div className="flex items-center gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && send()}
+              placeholder="Type a message..."
+              className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            />
+            <button
+              onClick={send}
+              disabled={!input.trim() || sending}
+              className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
+            >
+              {sending ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Send size={18} />
+              )}
             </button>
-          ))}
-        </div>
-
-        {/* Input - Fixed at bottom */}
-        <div className="flex gap-2 px-4 py-3 rounded-b-2xl flex-shrink-0
-          bg-white dark:bg-gray-900 border border-t-0 border-gray-100 dark:border-gray-800">
-          <input 
-            ref={inputRef} 
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
-            placeholder="Message TooroGadgets…"
-            onClick={(e) => {
-              e.currentTarget.focus();
-            }}
-            className="flex-1 px-4 py-2.5 rounded-xl text-sm focus:outline-none transition-all
-              bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white
-              border border-gray-200 dark:border-gray-700
-              focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10" />
-          <button onClick={send} disabled={!input.trim() || sending}
-            className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-40"
-            style={{ background: input.trim() ? '#2563eb' : '#e5e7eb' }}>
-            {sending
-              ? <Loader2 size={16} className="animate-spin text-white" />
-              : <Send size={16} className={input.trim() ? 'text-white' : 'text-gray-400'} />}
-          </button>
+          </div>
         </div>
       </div>
     </div>
