@@ -6,38 +6,28 @@ interface BottomNavProps {
   activeTab: Tab;
   onTabChange: (tab: Tab) => void;
   cartCount: number;
+  chatUnread?: number;
 }
 
-export function BottomNav({ activeTab, onTabChange, cartCount }: BottomNavProps) {
+export function BottomNav({ activeTab, onTabChange, cartCount, chatUnread = 0 }: BottomNavProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 py-2 px-6 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] safe-area-bottom transition-colors">
+    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 py-2 px-6 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] transition-colors">
       <div className="max-w-md mx-auto flex justify-between items-center">
-        <button
-          onClick={() => onTabChange('home')}
-          className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${
-            activeTab === 'home' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-          }`}
-        >
+
+        <button onClick={() => onTabChange('home')}
+          className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${activeTab === 'home' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
           <Home size={24} strokeWidth={activeTab === 'home' ? 2.5 : 2} />
           <span className="text-[10px] font-medium">Home</span>
         </button>
 
-        <button
-          onClick={() => onTabChange('categories')}
-          className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${
-            activeTab === 'categories' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-          }`}
-        >
+        <button onClick={() => onTabChange('categories')}
+          className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${activeTab === 'categories' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
           <LayoutGrid size={24} strokeWidth={activeTab === 'categories' ? 2.5 : 2} />
           <span className="text-[10px] font-medium">Categories</span>
         </button>
 
-        <button
-          onClick={() => onTabChange('cart')}
-          className={`relative flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${
-            activeTab === 'cart' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-          }`}
-        >
+        <button onClick={() => onTabChange('cart')}
+          className={`relative flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${activeTab === 'cart' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
           <div className="relative">
             <ShoppingCart size={24} strokeWidth={activeTab === 'cart' ? 2.5 : 2} />
             {cartCount > 0 && (
@@ -49,25 +39,25 @@ export function BottomNav({ activeTab, onTabChange, cartCount }: BottomNavProps)
           <span className="text-[10px] font-medium">Cart</span>
         </button>
 
-        <button
-          onClick={() => onTabChange('chat')}
-          className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${
-            activeTab === 'chat' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-          }`}
-        >
-          <MessageCircle size={24} strokeWidth={activeTab === 'chat' ? 2.5 : 2} />
+        <button onClick={() => onTabChange('chat')}
+          className={`relative flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${activeTab === 'chat' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
+          <div className="relative">
+            <MessageCircle size={24} strokeWidth={activeTab === 'chat' ? 2.5 : 2} />
+            {chatUnread > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-900 animate-pulse">
+                {chatUnread}
+              </span>
+            )}
+          </div>
           <span className="text-[10px] font-medium">Chat</span>
         </button>
 
-        <button
-          onClick={() => onTabChange('history')}
-          className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${
-            activeTab === 'history' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-          }`}
-        >
+        <button onClick={() => onTabChange('history')}
+          className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${activeTab === 'history' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
           <Clock size={24} strokeWidth={activeTab === 'history' ? 2.5 : 2} />
           <span className="text-[10px] font-medium">History</span>
         </button>
+
       </div>
     </div>
   );
