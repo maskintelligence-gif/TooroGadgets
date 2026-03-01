@@ -176,8 +176,6 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
     return () => { document.body.style.overflow = ''; };
   }, []);
 
-
-
   const scrollDown = (smooth = true) => {
     endRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant' });
   };
@@ -277,8 +275,9 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
   if (!identity) {
     return (
       <div className="flex flex-col items-center w-full px-0" style={{height: 'calc(100dvh - 130px)'}}>
-      <div className="w-full max-w-lg flex flex-col h-full">
-        <IdentitySetup onDone={setIdentity} />
+        <div className="w-full max-w-lg flex flex-col h-full">
+          <IdentitySetup onDone={setIdentity} />
+        </div>
       </div>
     );
   }
@@ -288,142 +287,142 @@ export function Chat({ isActive, onUnreadChange }: ChatProps) {
   return (
     <div className="flex flex-col items-center w-full px-0" style={{height: 'calc(100dvh - 130px)'}}>
       <div className="w-full max-w-lg flex flex-col h-full">
-
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 rounded-t-2xl flex-shrink-0
-        bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm">
-        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-blue-500/20">
-          <Zap size={18} className="text-white" fill="white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm text-gray-900 dark:text-white">TooroGadgets Support</p>
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <p className="text-xs text-gray-500 dark:text-gray-400">Online · replies in minutes</p>
+        {/* Header */}
+        <div className="flex items-center gap-3 px-4 py-3 rounded-t-2xl flex-shrink-0
+          bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm">
+          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-blue-500/20">
+            <Zap size={18} className="text-white" fill="white" />
           </div>
-        </div>
-        {'Notification' in window && (
-          <button onClick={requestNotifications}
-            className={`p-2 rounded-xl transition-all active:scale-90 ${notifPermission === 'granted' ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
-            title={notifPermission === 'granted' ? 'Notifications on' : 'Enable notifications'}>
-            {notifPermission === 'granted'
-              ? <Bell size={16} className="text-blue-600 dark:text-blue-400" />
-              : <BellOff size={16} className="text-gray-400" />}
-          </button>
-        )}
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-3
-        bg-gray-50 dark:bg-gray-950 border-x border-gray-100 dark:border-gray-800">
-        {loading ? (
-          <div className="flex justify-center items-center h-full">
-            <Loader2 size={24} className="animate-spin text-blue-500" />
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-3 py-10">
-            <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-              <MessageCircle size={24} className="text-blue-500" />
-            </div>
-            <div className="text-center">
-              <p className="font-semibold text-gray-800 dark:text-white text-sm">Hi {identity.name}! 👋</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Send us a message and we'll reply shortly.</p>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm text-gray-900 dark:text-white">TooroGadgets Support</p>
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-xs text-gray-500 dark:text-gray-400">Online · replies in minutes</p>
             </div>
           </div>
-        ) : (
-          <div className="space-y-0.5">
-            {grouped.map(group => (
-              <div key={group.date}>
-                {/* Date divider */}
-                <div className="flex items-center gap-3 my-4">
-                  <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
-                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{group.date}</span>
-                  <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
-                </div>
+          {'Notification' in window && (
+            <button onClick={requestNotifications}
+              className={`p-2 rounded-xl transition-all active:scale-90 ${notifPermission === 'granted' ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+              title={notifPermission === 'granted' ? 'Notifications on' : 'Enable notifications'}>
+              {notifPermission === 'granted'
+                ? <Bell size={16} className="text-blue-600 dark:text-blue-400" />
+                : <BellOff size={16} className="text-gray-400" />}
+            </button>
+          )}
+        </div>
 
-                {group.messages.map((msg, i) => {
-                  const isCustomer = msg.sender_type === 'customer';
-                  const nextMsg = group.messages[i + 1];
-                  const isLastInGroup = !nextMsg || nextMsg.sender_type !== msg.sender_type;
-
-                  return (
-                    <div key={msg.message_id} className={`flex mb-0.5 ${isCustomer ? 'justify-end' : 'justify-start'}`}>
-                      {!isCustomer && (
-                        <div className={`w-6 h-6 rounded-full bg-blue-600 flex-shrink-0 mr-2 self-end mb-1
-                          flex items-center justify-center ${isLastInGroup ? 'opacity-100' : 'opacity-0'}`}>
-                          <Zap size={10} className="text-white" fill="white" />
-                        </div>
-                      )}
-                      <div className={`max-w-[75%] ${!isCustomer && !isLastInGroup ? 'ml-8' : ''}`}>
-                        <div className={`rounded-2xl px-4 py-2.5 ${
-                          isCustomer
-                            ? 'bg-blue-600 text-white rounded-br-md'
-                            : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md border border-gray-100 dark:border-gray-700 shadow-sm'
-                        } ${isLastInGroup ? '' : isCustomer ? 'rounded-br-2xl' : 'rounded-bl-2xl'}`}>
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                        </div>
-                        {isLastInGroup && (
-                          <p className={`text-[10px] mt-1 px-1 text-gray-400 dark:text-gray-500 ${isCustomer ? 'text-right' : ''}`}>
-                            {formatTime(msg.created_at)}
-                            {isCustomer && (msg.read_at
-                              ? <span className="ml-1 text-blue-500"> ✓✓</span>
-                              : <span className="ml-1 text-gray-300 dark:text-gray-600"> ✓</span>)}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-3
+          bg-gray-50 dark:bg-gray-950 border-x border-gray-100 dark:border-gray-800">
+          {loading ? (
+            <div className="flex justify-center items-center h-full">
+              <Loader2 size={24} className="animate-spin text-blue-500" />
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full gap-3 py-10">
+              <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                <MessageCircle size={24} className="text-blue-500" />
               </div>
-            ))}
-          </div>
-        )}
-        <div ref={endRef} />
-      </div>
+              <div className="text-center">
+                <p className="font-semibold text-gray-800 dark:text-white text-sm">Hi {identity.name}! 👋</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Send us a message and we'll reply shortly.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-0.5">
+              {grouped.map(group => (
+                <div key={group.date}>
+                  {/* Date divider */}
+                  <div className="flex items-center gap-3 my-4">
+                    <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{group.date}</span>
+                    <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+                  </div>
 
-      {/* Notification prompt */}
-      {'Notification' in window && notifPermission === 'default' && (
-        <button onClick={requestNotifications}
-          className="flex items-center gap-2.5 px-4 py-2.5 flex-shrink-0 transition-all active:scale-[0.99]
-            bg-blue-50 dark:bg-blue-900/20 border-x border-blue-100 dark:border-blue-800/50">
-          <Bell size={14} className="text-blue-600 flex-shrink-0" />
-          <p className="text-xs text-blue-700 dark:text-blue-300 flex-1">Enable notifications to get alerted when we reply</p>
-          <span className="text-xs font-semibold text-blue-600">Enable →</span>
-        </button>
-      )}
+                  {group.messages.map((msg, i) => {
+                    const isCustomer = msg.sender_type === 'customer';
+                    const nextMsg = group.messages[i + 1];
+                    const isLastInGroup = !nextMsg || nextMsg.sender_type !== msg.sender_type;
 
-      {/* Quick replies */}
-      <div className="flex gap-2 overflow-x-auto px-4 py-2 flex-shrink-0 no-scrollbar
-        bg-white dark:bg-gray-900 border-x border-gray-100 dark:border-gray-800">
-        {['What are your prices? 💰', 'Do you deliver? 🛵', 'Is this in stock? 📦', 'Payment options? 💳'].map(r => (
-          <button key={r} onClick={() => { setInput(r); inputRef.current?.focus(); }}
-            className="flex-shrink-0 text-xs px-3 py-1.5 rounded-full transition-all active:scale-95
-              bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300
-              hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600
-              border border-gray-200 dark:border-gray-700">
-            {r}
+                    return (
+                      <div key={msg.message_id} className={`flex mb-0.5 ${isCustomer ? 'justify-end' : 'justify-start'}`}>
+                        {!isCustomer && (
+                          <div className={`w-6 h-6 rounded-full bg-blue-600 flex-shrink-0 mr-2 self-end mb-1
+                            flex items-center justify-center ${isLastInGroup ? 'opacity-100' : 'opacity-0'}`}>
+                            <Zap size={10} className="text-white" fill="white" />
+                          </div>
+                        )}
+                        <div className={`max-w-[75%] ${!isCustomer && !isLastInGroup ? 'ml-8' : ''}`}>
+                          <div className={`rounded-2xl px-4 py-2.5 ${
+                            isCustomer
+                              ? 'bg-blue-600 text-white rounded-br-md'
+                              : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md border border-gray-100 dark:border-gray-700 shadow-sm'
+                          } ${isLastInGroup ? '' : isCustomer ? 'rounded-br-2xl' : 'rounded-bl-2xl'}`}>
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                          </div>
+                          {isLastInGroup && (
+                            <p className={`text-[10px] mt-1 px-1 text-gray-400 dark:text-gray-500 ${isCustomer ? 'text-right' : ''}`}>
+                              {formatTime(msg.created_at)}
+                              {isCustomer && (msg.read_at
+                                ? <span className="ml-1 text-blue-500"> ✓✓</span>
+                                : <span className="ml-1 text-gray-300 dark:text-gray-600"> ✓</span>)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          )}
+          <div ref={endRef} />
+        </div>
+
+        {/* Notification prompt */}
+        {'Notification' in window && notifPermission === 'default' && (
+          <button onClick={requestNotifications}
+            className="flex items-center gap-2.5 px-4 py-2.5 flex-shrink-0 transition-all active:scale-[0.99]
+              bg-blue-50 dark:bg-blue-900/20 border-x border-blue-100 dark:border-blue-800/50">
+            <Bell size={14} className="text-blue-600 flex-shrink-0" />
+            <p className="text-xs text-blue-700 dark:text-blue-300 flex-1">Enable notifications to get alerted when we reply</p>
+            <span className="text-xs font-semibold text-blue-600">Enable →</span>
           </button>
-        ))}
-      </div>
+        )}
 
-      {/* Input */}
-      <div className="flex gap-2 px-4 py-3 flex-shrink-0 rounded-b-2xl
-        bg-white dark:bg-gray-900 border border-t-0 border-gray-100 dark:border-gray-800">
-        <input ref={inputRef} value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
-          placeholder="Message TooroGadgets…"
-          className="flex-1 px-4 py-2.5 rounded-xl text-sm focus:outline-none transition-all
-            bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white
-            border border-gray-200 dark:border-gray-700
-            focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10" />
-        <button onClick={send} disabled={!input.trim() || sending}
-          className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-40"
-          style={{ background: input.trim() ? '#2563eb' : '#e5e7eb' }}>
-          {sending
-            ? <Loader2 size={16} className="animate-spin text-white" />
-            : <Send size={16} className={input.trim() ? 'text-white' : 'text-gray-400'} />}
-        </button>
+        {/* Quick replies */}
+        <div className="flex gap-2 overflow-x-auto px-4 py-2 flex-shrink-0 no-scrollbar
+          bg-white dark:bg-gray-900 border-x border-gray-100 dark:border-gray-800">
+          {['What are your prices? 💰', 'Do you deliver? 🛵', 'Is this in stock? 📦', 'Payment options? 💳'].map(r => (
+            <button key={r} onClick={() => { setInput(r); inputRef.current?.focus(); }}
+              className="flex-shrink-0 text-xs px-3 py-1.5 rounded-full transition-all active:scale-95
+                bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300
+                hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600
+                border border-gray-200 dark:border-gray-700">
+              {r}
+            </button>
+          ))}
+        </div>
+
+        {/* Input */}
+        <div className="flex gap-2 px-4 py-3 flex-shrink-0 rounded-b-2xl
+          bg-white dark:bg-gray-900 border border-t-0 border-gray-100 dark:border-gray-800">
+          <input ref={inputRef} value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
+            placeholder="Message TooroGadgets…"
+            className="flex-1 px-4 py-2.5 rounded-xl text-sm focus:outline-none transition-all
+              bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white
+              border border-gray-200 dark:border-gray-700
+              focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10" />
+          <button onClick={send} disabled={!input.trim() || sending}
+            className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-40"
+            style={{ background: input.trim() ? '#2563eb' : '#e5e7eb' }}>
+            {sending
+              ? <Loader2 size={16} className="animate-spin text-white" />
+              : <Send size={16} className={input.trim() ? 'text-white' : 'text-gray-400'} />}
+          </button>
+        </div>
       </div>
     </div>
   );
