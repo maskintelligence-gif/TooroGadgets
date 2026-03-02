@@ -28,7 +28,7 @@ interface CheckoutProps {
 
 type Step = 'info' | 'fulfillment' | 'review' | 'success';
 
-const DELIVERY_FEE = THE RIDER WILL CHARGE YOU;
+const DELIVERY_FEE = 4000;
 
 export function Checkout({ cartItems, onBack, onOrderSuccess, onGoToHistory }: CheckoutProps) {
   const { customer, saveCustomer } = useCustomer();
