@@ -51,7 +51,7 @@ function mapDbProduct(p: any): Product {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapDbProduct(p: any): Product {
+
   const images: { image_url: string; display_order: number }[] =
     p.product_images || [];
   const sortedImages = [...images].sort(
