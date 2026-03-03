@@ -70,10 +70,20 @@ export function ProductDetails({ product, onClose, onAddToCart, onSelectProduct,
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         <div className="flex flex-col lg:flex-row gap-12">
+          {/* FIXED IMAGE SECTION - Padding removed from container, added to image */}
           <div className="w-full lg:w-1/2">
-            <div className="relative group bg-gray-50 dark:bg-gray-900 rounded-3xl p-8 sm:p-12 flex items-center justify-center aspect-square lg:aspect-auto lg:h-[600px] overflow-hidden">
-              <img src={product.image} alt={product.name} className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal cursor-zoom-in" onClick={() => setIsPreviewOpen(true)} referrerPolicy="no-referrer" />
-              <button onClick={() => setIsPreviewOpen(true)} className="absolute bottom-6 right-6 p-3 bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 rounded-full shadow-lg text-gray-700 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="relative group bg-gray-50 dark:bg-gray-900 rounded-3xl flex items-center justify-center aspect-square lg:aspect-auto lg:h-[600px] overflow-hidden">
+              <img 
+                src={product.image} 
+                alt={product.name} 
+                className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal cursor-zoom-in p-4 sm:p-6" 
+                onClick={() => setIsPreviewOpen(true)} 
+                referrerPolicy="no-referrer" 
+              />
+              <button 
+                onClick={() => setIsPreviewOpen(true)} 
+                className="absolute bottom-4 right-4 p-3 bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 rounded-full shadow-lg text-gray-700 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
                 <Maximize2 size={20} />
               </button>
             </div>
