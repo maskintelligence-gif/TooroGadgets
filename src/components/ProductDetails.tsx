@@ -17,19 +17,6 @@ export function ProductDetails({ product, onClose, onAddToCart, onSelectProduct,
   const [isCopied, setIsCopied] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  export function ProductDetails({ product, onClose, onAddToCart, onSelectProduct, backLabel = 'Back to Catalog' }: ProductDetailsProps) {
-  console.log('Product received in ProductDetails:', product);
-  console.log('Product images array:', product.images);
-  
-  // Use product.images if available, otherwise fallback to single image array
-  const productImages = product.images && product.images.length > 0 
-    ? product.images 
-    : [product.image];
-  
-  console.log('Final productImages used:', productImages);
-  
-}
-
   // Use product.images if available, otherwise fallback to single image array
   const productImages = product.images && product.images.length > 0 
     ? product.images 
@@ -57,6 +44,19 @@ export function ProductDetails({ product, onClose, onAddToCart, onSelectProduct,
       alert('Due to browser security restrictions, we opened the image in a new tab. Right-click and "Save Image As..." to download.');
     }
   };
+
+  export function ProductDetails({ product, onClose, onAddToCart, onSelectProduct, backLabel = 'Back to Catalog' }: ProductDetailsProps) {
+  console.log('Product received in ProductDetails:', product);
+  console.log('Product images array:', product.images);
+  
+  // Use product.images if available, otherwise fallback to single image array
+  const productImages = product.images && product.images.length > 0 
+    ? product.images 
+    : [product.image];
+  
+  console.log('Final productImages used:', productImages);
+  
+}
 
   const handleShare = async () => {
     const productUrl = `${window.location.origin}${import.meta.env.BASE_URL}#/product/${product.id}`;
