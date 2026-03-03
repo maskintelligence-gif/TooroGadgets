@@ -6,7 +6,7 @@ interface SplashScreenProps {
   minimumLoadTime?: number;
 }
 
-export function SplashScreen({ onFinish, minimumLoadTime = 2500 }: SplashScreenProps) {
+export function SplashScreen({ onFinish, minimumLoadTime = 4000 }: SplashScreenProps) {
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
