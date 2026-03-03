@@ -88,11 +88,11 @@ export function ProductCard({ product, onAddToCart, onClick, viewMode = 'grid' }
       </div>
 
       {/* Image Container */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-gray-50 dark:bg-gray-800 p-4 flex items-center justify-center">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gray-50 dark:bg-gray-800">
         <img
           src={product.image}
           alt={product.name}
-          className="object-contain w-full h-full group-hover:scale-105 transition-transform duration-300"
+          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
           referrerPolicy="no-referrer"
         />
       </div>
