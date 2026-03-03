@@ -16,12 +16,14 @@ import { Category, categories } from './data/products';
 import { Product } from './data/products';
 import { LayoutGrid, List, ArrowLeft } from 'lucide-react';
 import { useProducts } from './hooks/useProducts';
+import { SplashScreen } from './components/SplashScreen';
 
 interface CartItem extends Product {
   quantity: number;
 }
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [activeCategory, setActiveCategory] = useState<Category>('All');
   const [filterType, setFilterType] = useState<'all' | 'new' | 'sale'>('all');
@@ -37,8 +39,8 @@ export default function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [showCheckout, setShowCheckout] = useState(false);
 
-  // Live products from Supabase (falls back to hardcoded)
-  const { products, isLive } = useProducts();
+  // Live products from Supabase
+  const { products, isLive, loading } = useProducts();
 
   const scrollPositionRef = useRef(0);
   const footerRef = useRef<HTMLElement>(null);
@@ -49,17 +51,7 @@ export default function App() {
     else document.documentElement.classList.remove('dark');
   }, [theme]);
 
-  // ─── Hardware/browser back button support ────────────────────────────────────
-useEffect(() => {
-  const handleAddToCartEvent = (event: CustomEvent) => {
-    const { product, openCart } = event.detail;
-    handleAddToCart(product, openCart);
-  };
-
-  window.addEventListener('addToCart', handleAddToCartEvent as EventListener);
-  return () => window.removeEventListener('addToCart', handleAddToCartEvent as EventListener);
-}, []);
-  
+  // Hardware/browser back button support
   useEffect(() => {
     window.history.replaceState({ page: 'home' }, '');
   }, []);
@@ -191,7 +183,12 @@ useEffect(() => {
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  // ─── Checkout overlay ────────────────────────────────────────────────────────
+  // Show splash screen while products are loading
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
+  // Checkout overlay
   if (showCheckout) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 font-sans text-gray-900 dark:text-gray-100 transition-colors pb-8">
@@ -276,7 +273,7 @@ useEffect(() => {
                     ))}
                   </div>
 
-                  {filteredProducts.length === 0 && (
+                  {filteredProducts.length === 0 && !loading && (
                     <div className="text-center py-24">
                       <p className="text-gray-500 text-lg">No products found in this category.</p>
                     </div>
@@ -312,7 +309,7 @@ useEffect(() => {
                         <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} onClick={handleProductSelect} viewMode={viewMode} />
                       ))}
                     </div>
-                    {filteredProducts.length === 0 && <div className="text-center py-24"><p className="text-gray-500 text-lg">No products found.</p></div>}
+                    {filteredProducts.length === 0 && !loading && <div className="text-center py-24"><p className="text-gray-500 text-lg">No products found.</p></div>}
                   </>
                 )}
               </div>
