@@ -16,14 +16,12 @@ import { Category, categories } from './data/products';
 import { Product } from './data/products';
 import { LayoutGrid, List, ArrowLeft } from 'lucide-react';
 import { useProducts } from './hooks/useProducts';
-import { SplashScreen } from './components/SplashScreen';
 
 interface CartItem extends Product {
   quantity: number;
 }
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [activeCategory, setActiveCategory] = useState<Category>('All');
   const [filterType, setFilterType] = useState<'all' | 'new' | 'sale'>('all');
@@ -39,8 +37,8 @@ export default function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [showCheckout, setShowCheckout] = useState(false);
 
-  // Live products from Supabase
-  const { products, isLive, loading } = useProducts();
+  // Live products from Supabase (falls back to hardcoded)
+  const { products, isLive } = useProducts();
 
   const scrollPositionRef = useRef(0);
   const footerRef = useRef<HTMLElement>(null);
@@ -51,7 +49,17 @@ export default function App() {
     else document.documentElement.classList.remove('dark');
   }, [theme]);
 
-  // Hardware/browser back button support
+  // ─── Hardware/browser back button support ────────────────────────────────────
+useEffect(() => {
+  const handleAddToCartEvent = (event: CustomEvent) => {
+    const { product, openCart } = event.detail;
+    handleAddToCart(product, openCart);
+  };
+
+  window.addEventListener('addToCart', handleAddToCartEvent as EventListener);
+  return () => window.removeEventListener('addToCart', handleAddToCartEvent as EventListener);
+}, []);
+  
   useEffect(() => {
     window.history.replaceState({ page: 'home' }, '');
   }, []);
@@ -183,11 +191,7 @@ export default function App() {
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-if (showSplash || loading) {
-  return <SplashScreen onFinish={() => setShowSplash(false)} minimumLoadTime={1000} />;
-}
-
-  // Checkout overlay
+  // ─── Checkout overlay ────────────────────────────────────────────────────────
   if (showCheckout) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 font-sans text-gray-900 dark:text-gray-100 transition-colors pb-8">
@@ -272,7 +276,7 @@ if (showSplash || loading) {
                     ))}
                   </div>
 
-                  {filteredProducts.length === 0 && !loading && (
+                  {filteredProducts.length === 0 && (
                     <div className="text-center py-24">
                       <p className="text-gray-500 text-lg">No products found in this category.</p>
                     </div>
@@ -308,7 +312,7 @@ if (showSplash || loading) {
                         <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} onClick={handleProductSelect} viewMode={viewMode} />
                       ))}
                     </div>
-                    {filteredProducts.length === 0 && !loading && <div className="text-center py-24"><p className="text-gray-500 text-lg">No products found.</p></div>}
+                    {filteredProducts.length === 0 && <div className="text-center py-24"><p className="text-gray-500 text-lg">No products found.</p></div>}
                   </>
                 )}
               </div>
