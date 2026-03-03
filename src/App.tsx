@@ -183,10 +183,9 @@ export default function App() {
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Show splash screen while products are loading
-  if (showSplash) {
-    return <SplashScreen onFinish={() => setShowSplash(false)} />;
-  }
+if (showSplash || loading) {
+  return <SplashScreen onFinish={() => setShowSplash(false)} minimumLoadTime={4000} />;
+}
 
   // Checkout overlay
   if (showCheckout) {
