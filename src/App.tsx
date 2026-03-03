@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect } from 'react';
+import { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { Header } from './components/Header';
 import { ProductCard } from './components/ProductCard';
 import { Cart } from './components/Cart';
@@ -49,6 +49,29 @@ export default function App() {
     else document.documentElement.classList.remove('dark');
   }, [theme]);
 
+  // ─── Hardware/browser back button support ────────────────────────────────────
+  useEffect(() => {
+    window.history.replaceState({ page: 'home' }, '');
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (showCheckout) {
+        setShowCheckout(false);
+      } else if (selectedProduct) {
+        setSelectedProduct(null);
+        if (returnToCart) {
+          setIsCartOpen(true);
+          setReturnToCart(false);
+        }
+      } else if (activeTab !== 'home') {
+        setActiveTab('home');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [showCheckout, selectedProduct, activeTab, returnToCart]);
+
   const filteredProducts = products.filter(p => {
     const categoryMatch = activeCategory === 'All' || p.category === activeCategory;
     const filterMatch =
@@ -83,6 +106,7 @@ export default function App() {
 
   const handleProductSelect = (product: Product) => {
     scrollPositionRef.current = window.scrollY;
+    window.history.pushState({ page: 'product', id: product.id }, '');
     setSelectedProduct(product);
     setReturnToCart(false);
   };
@@ -107,6 +131,7 @@ export default function App() {
   };
 
   const handleCartProductSelect = (product: Product) => {
+    window.history.pushState({ page: 'product', id: product.id }, '');
     setSelectedProduct(product);
     setReturnToCart(true);
     setIsCartOpen(false);
@@ -291,7 +316,10 @@ export default function App() {
                   onUpdateQuantity={handleUpdateQuantity}
                   onRemoveItem={handleRemoveItem}
                   onProductClick={handleCartProductSelect}
-                  onCheckout={() => setShowCheckout(true)}
+                  onCheckout={() => {
+                    window.history.pushState({ page: 'checkout' }, '');
+                    setShowCheckout(true);
+                  }}
                   variant="inline"
                 />
               </div>
@@ -360,7 +388,11 @@ export default function App() {
       )}
 
       {!selectedProduct && (
-        <BottomNav activeTab={activeTab} onTabChange={(tab) => { if (tab === 'chat') setChatUnread(0); setActiveTab(tab); }} cartCount={cartCount} chatUnread={chatUnread} />
+        <BottomNav activeTab={activeTab} onTabChange={(tab) => {
+          if (tab !== activeTab) window.history.pushState({ page: tab }, '');
+          if (tab === 'chat') setChatUnread(0);
+          setActiveTab(tab);
+        }} cartCount={cartCount} chatUnread={chatUnread} />
       )}
 
       {toastMessage && (
