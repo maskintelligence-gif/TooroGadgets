@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, Phone, User, AlertCircle, Loader2, ChevronDown, ArrowLeft } from 'lucide-react';
+import { MessageCircle, Send, Phone, User, AlertCircle, Loader2, ChevronDown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useCustomer } from '../hooks/useCustomer';
 
@@ -25,20 +25,19 @@ function IdentityForm({ onSubmit }: { onSubmit: (name: string, phone: string) =>
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center p-4" style={{ background: 'var(--bg)' }}>
-      <div className="w-full max-w-md rounded-2xl p-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+    <div className="h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-950">
+      <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-               style={{ background: 'var(--accent)', opacity: 0.1 }}>
-            <MessageCircle size={28} style={{ color: 'var(--accent)' }} />
+          <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <MessageCircle size={28} className="text-blue-600" />
           </div>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text)' }}>Start a Conversation</h2>
-          <p className="text-sm mt-1" style={{ color: 'var(--text3)' }}>Enter your details to chat with us</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Start a Conversation</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Enter your details to chat with us</p>
         </div>
         
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text2)' }}>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               <User size={14} className="inline mr-1" /> Full Name
             </label>
             <input 
@@ -46,23 +45,19 @@ function IdentityForm({ onSubmit }: { onSubmit: (name: string, phone: string) =>
               value={form.name} 
               onChange={(e) => setForm({ ...form, name: e.target.value })} 
               placeholder="e.g. John Mwesigye"
-              className="w-full px-4 py-3 rounded-xl focus:outline-none"
-              style={{ 
-                background: 'var(--surface2)', 
-                color: 'var(--text)', 
-                border: '1px solid',
-                borderColor: errors.name ? 'var(--rose)' : 'var(--border)'
-              }} 
+              className={`w-full px-4 py-3 rounded-xl border bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors ${
+                errors.name ? 'border-red-400' : 'border-gray-200 dark:border-gray-700'
+              }`} 
             />
             {errors.name && (
-              <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--rose)' }}>
+              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
                 <AlertCircle size={12} /> {errors.name}
               </p>
             )}
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text2)' }}>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               <Phone size={14} className="inline mr-1" /> Phone Number
             </label>
             <input 
@@ -71,16 +66,12 @@ function IdentityForm({ onSubmit }: { onSubmit: (name: string, phone: string) =>
               onChange={(e) => setForm({ ...form, phone: e.target.value })} 
               placeholder="+256 701 234567"
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-              className="w-full px-4 py-3 rounded-xl focus:outline-none"
-              style={{ 
-                background: 'var(--surface2)', 
-                color: 'var(--text)', 
-                border: '1px solid',
-                borderColor: errors.phone ? 'var(--rose)' : 'var(--border)'
-              }} 
+              className={`w-full px-4 py-3 rounded-xl border bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors ${
+                errors.phone ? 'border-red-400' : 'border-gray-200 dark:border-gray-700'
+              }`} 
             />
             {errors.phone && (
-              <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--rose)' }}>
+              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
                 <AlertCircle size={12} /> {errors.phone}
               </p>
             )}
@@ -88,8 +79,7 @@ function IdentityForm({ onSubmit }: { onSubmit: (name: string, phone: string) =>
           
           <button 
             onClick={handleSubmit} 
-            className="w-full py-3 rounded-xl font-semibold transition-all active:scale-95"
-            style={{ background: 'var(--accent)', color: 'white' }}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors"
           >
             Start Chat
           </button>
@@ -108,7 +98,6 @@ export function Chat() {
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -116,34 +105,6 @@ export function Chat() {
   const [identity, setIdentity] = useState<{ name: string; phone: string } | null>(
     customer ? { name: customer.name, phone: customer.phone } : null
   );
-
-  // Handle keyboard appearance on mobile
-  useEffect(() => {
-    const handleResize = () => {
-      // Visual Viewport API gives actual visible area dimensions
-      if (window.visualViewport) {
-        const windowHeight = window.innerHeight;
-        const visualViewportHeight = window.visualViewport.height;
-        const keyboardVisible = windowHeight - visualViewportHeight > 100;
-        
-        if (keyboardVisible) {
-          setKeyboardHeight(windowHeight - visualViewportHeight);
-          // Scroll to bottom when keyboard opens
-          setTimeout(() => scrollToBottom('auto'), 100);
-        } else {
-          setKeyboardHeight(0);
-        }
-      }
-    };
-
-    window.visualViewport?.addEventListener('resize', handleResize);
-    window.visualViewport?.addEventListener('scroll', handleResize);
-    
-    return () => {
-      window.visualViewport?.removeEventListener('resize', handleResize);
-      window.visualViewport?.removeEventListener('scroll', handleResize);
-    };
-  }, []);
 
   // Scroll to bottom function
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
@@ -276,68 +237,56 @@ export function Chat() {
     }
   };
 
-  // Focus input when conversation loads
-  useEffect(() => {
-    if (conversationId && !initializing) {
-      inputRef.current?.focus();
-    }
-  }, [conversationId, initializing]);
-
   if (!identity) return <IdentityForm onSubmit={handleIdentitySubmit} />;
 
   if (initializing) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+      <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
         <div className="text-center">
-          <Loader2 size={32} className="animate-spin mx-auto mb-3" style={{ color: 'var(--accent)' }} />
-          <p className="text-sm" style={{ color: 'var(--text3)' }}>Connecting to chat...</p>
+          <Loader2 size={32} className="animate-spin text-blue-600 mx-auto mb-3" />
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Connecting to chat...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col" style={{ background: 'var(--bg)' }}>
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0"
-           style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
-        <div className="w-9 h-9 rounded-full flex items-center justify-center"
-             style={{ background: 'var(--accent)', opacity: 0.1 }}>
-          <MessageCircle size={18} style={{ color: 'var(--accent)' }} />
-        </div>
-        <div className="flex-1">
-          <h1 className="font-semibold text-sm" style={{ color: 'var(--text)' }}>Customer Support</h1>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--green)' }} />
-            <span className="text-xs" style={{ color: 'var(--text3)' }}>Typically replies instantly</span>
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
+      {/* Header - Fixed */}
+      <div className="flex-none bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 shadow-sm">
+        <div className="max-w-3xl mx-auto w-full">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+              <MessageCircle size={20} className="text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <h1 className="font-semibold text-gray-900 dark:text-white">Customer Support</h1>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-xs text-gray-500 dark:text-gray-400">Typically replies instantly</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Messages Container */}
+      {/* Messages Container - Scrollable */}
       <div 
         ref={messagesContainerRef}
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto px-4 py-4"
-        style={{ paddingBottom: keyboardHeight > 0 ? '8px' : '16px' }}
       >
-        <div className="space-y-3">
+        <div className="max-w-3xl mx-auto w-full space-y-3">
           {/* Welcome message */}
           {messages.length === 0 && (
             <div className="flex justify-start">
-              <div className="max-w-[80%] rounded-2xl px-4 py-3"
-                   style={{ 
-                     background: 'var(--surface)',
-                     color: 'var(--text)',
-                     borderBottomLeftRadius: '4px',
-                     border: '1px solid var(--border)'
-                   }}>
-                <p className="text-sm whitespace-pre-wrap">
+              <div className="max-w-[85%] sm:max-w-[70%] bg-white dark:bg-gray-800 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm">
+                <p className="text-sm text-gray-900 dark:text-white">
                   Hello {identity.name.split(' ')[0]}! 👋 How can we help you today?
                 </p>
-                <p className="text-[10px] mt-1" style={{ opacity: 0.6, textAlign: 'right' }}>
+                <span className="text-[10px] text-gray-400 mt-1 block">
                   {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </p>
+                </span>
               </div>
             </div>
           )}
@@ -349,37 +298,37 @@ export function Chat() {
             
             return (
               <div key={msg.message_id} className={`flex ${isCustomer ? 'justify-end' : 'justify-start'}`}>
-                <div className={`flex gap-2 max-w-[80%] ${isCustomer ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className={`flex gap-2 max-w-[85%] sm:max-w-[70%] ${isCustomer ? 'flex-row-reverse' : 'flex-row'}`}>
                   {/* Avatar for admin messages */}
                   {!isCustomer && showAvatar && (
-                    <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-medium"
-                         style={{ background: 'var(--surface2)', color: 'var(--text2)' }}>
-                      CS
+                    <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-700 flex-shrink-0 flex items-center justify-center">
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">CS</span>
                     </div>
                   )}
                   
                   {/* Message bubble */}
                   <div className={`flex-1 ${!isCustomer && !showAvatar ? 'ml-10' : ''}`}>
-                    <div className={`rounded-2xl px-4 py-3 ${
-                      isCustomer 
-                        ? '' 
-                        : ''
-                    }`}
-                         style={{
-                           background: isCustomer ? 'var(--accent)' : 'var(--surface)',
-                           color: isCustomer ? 'white' : 'var(--text)',
-                           borderBottomRightRadius: isCustomer ? '4px' : '16px',
-                           borderBottomLeftRadius: isCustomer ? '16px' : '4px',
-                           border: !isCustomer ? '1px solid var(--border)' : 'none'
-                         }}>
+                    <div className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+                      isCustomer
+                        ? 'bg-blue-600 text-white rounded-br-none'
+                        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-none'
+                    }`}>
                       <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                     </div>
                     
                     {/* Timestamp and read status */}
-                    <div className={`flex items-center gap-1 mt-1 text-[10px]`}
-                         style={{ color: 'var(--text3)', justifyContent: isCustomer ? 'flex-end' : 'flex-start' }}>
-                      <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      {isCustomer && msg.read_at && <span>✓✓</span>}
+                    <div className={`flex items-center gap-1 mt-1 text-[10px] text-gray-400 ${
+                      isCustomer ? 'justify-end' : 'justify-start'
+                    }`}>
+                      <span>{new Date(msg.created_at).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}</span>
+                      {isCustomer && (
+                        <span>
+                          {msg.read_at ? '· Read' : '· Delivered'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -392,55 +341,53 @@ export function Chat() {
         </div>
       </div>
 
-      {/* Scroll to bottom button - adjusted for keyboard */}
+      {/* Scroll to bottom button */}
       {showScrollButton && (
         <button
           onClick={() => scrollToBottom('smooth')}
-          className="absolute right-4 rounded-full p-2 shadow-lg transition-all active:scale-90 z-10"
-          style={{ 
-            background: 'var(--surface)', 
-            border: '1px solid var(--border)',
-            bottom: keyboardHeight > 0 ? keyboardHeight + 16 : 80
-          }}
+          className="absolute bottom-20 right-4 bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
         >
-          <ChevronDown size={20} style={{ color: 'var(--text2)' }} />
+          <ChevronDown size={20} className="text-gray-600 dark:text-gray-400" />
         </button>
       )}
 
-      {/* Input Area - Now with keyboard awareness */}
-      <div 
-        className="flex-shrink-0 transition-all duration-200"
-        style={{ 
-          background: 'var(--surface)', 
-          borderTop: '1px solid var(--border)',
-          transform: `translateY(${keyboardHeight > 0 ? 0 : 0}px)`,
-          paddingBottom: keyboardHeight > 0 ? '8px' : '12px'
-        }}
-      >
-        <div className="px-4 py-3">
+      {/* Input Area - Fixed */}
+      <div className="flex-none bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 px-4 py-3">
+        <div className="max-w-3xl mx-auto w-full">
           <div className="flex items-end gap-2">
-            <input
-              ref={inputRef}
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-              placeholder="Type a message..."
-              className="flex-1 px-4 py-3 rounded-xl text-sm focus:outline-none"
-              style={{ background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)' }}
-            />
+            <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+              <textarea
+                ref={inputRef as any}
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder="Type a message..."
+                rows={1}
+                className="w-full px-4 py-3 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none resize-none max-h-32"
+                style={{ overflow: 'hidden' }}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = 'auto';
+                  target.style.height = Math.min(target.scrollHeight, 128) + 'px';
+                }}
+              />
+            </div>
             <button
               onClick={handleSend}
               disabled={!inputText.trim() || loading}
-              className="w-11 h-11 rounded-xl flex items-center justify-center transition-all active:scale-90 flex-shrink-0"
-              style={{ background: inputText.trim() ? 'var(--accent)' : 'var(--surface2)' }}
+              className="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 shadow-sm"
             >
-              {loading ? (
-                <Loader2 size={16} className="animate-spin" style={{ color: inputText.trim() ? 'white' : 'var(--text3)' }} />
-              ) : (
-                <Send size={16} style={{ color: inputText.trim() ? 'white' : 'var(--text3)' }} />
-              )}
+              {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
             </button>
           </div>
+          <p className="text-[10px] text-gray-400 mt-1.5 text-center">
+            Press Enter to send, Shift + Enter for new line
+          </p>
         </div>
       </div>
     </div>
