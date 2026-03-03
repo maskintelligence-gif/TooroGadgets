@@ -45,19 +45,6 @@ export function ProductDetails({ product, onClose, onAddToCart, onSelectProduct,
     }
   };
 
-  export function ProductDetails({ product, onClose, onAddToCart, onSelectProduct, backLabel = 'Back to Catalog' }: ProductDetailsProps) {
-  console.log('Product received in ProductDetails:', product);
-  console.log('Product images array:', product.images);
-  
-  // Use product.images if available, otherwise fallback to single image array
-  const productImages = product.images && product.images.length > 0 
-    ? product.images 
-    : [product.image];
-  
-  console.log('Final productImages used:', productImages);
-  
-}
-
   const handleShare = async () => {
     const productUrl = `${window.location.origin}${import.meta.env.BASE_URL}#/product/${product.id}`;
     
