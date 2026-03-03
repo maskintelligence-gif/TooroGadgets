@@ -21,7 +21,7 @@ jobs:
         node-version: '20.x'
         cache: 'npm'
     
-    # Debug step: Check what's in package.json
+    # Debug step: Check what in package.json
     - name: Check dependencies
       run: |
         echo "Checking package.json for supabase..."
