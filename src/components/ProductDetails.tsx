@@ -39,12 +39,30 @@ export function ProductDetails({ product, onClose, onAddToCart, onSelectProduct,
   };
 
   const handleShare = async () => {
-    if (navigator.share) {
-      try { await navigator.share({ title: product.name, text: product.description, url: window.location.href }); } catch {}
-    } else {
-      try { await navigator.clipboard.writeText(window.location.href); setIsCopied(true); setTimeout(() => setIsCopied(false), 2000); } catch {}
+  // Generate the hash-based product URL
+  const productUrl = `${window.location.origin}${import.meta.env.BASE_URL}#/product/${product.id}`;
+  
+  if (navigator.share) {
+    try { 
+      await navigator.share({ 
+        title: product.name, 
+        text: product.description, 
+        url: productUrl
+      }); 
+    } catch (err) {
+      // User cancelled share
     }
-  };
+  } else {
+    try { 
+      await navigator.clipboard.writeText(productUrl); 
+      setIsCopied(true); 
+      setTimeout(() => setIsCopied(false), 2000); 
+    } catch (err) {
+      // Fallback prompt
+      prompt('Copy this link:', productUrl);
+    }
+  }
+};
 
   const handleAddToCart = () => { onAddToCart(product, false); setIsAdded(true); setTimeout(() => setIsAdded(false), 2000); };
 
