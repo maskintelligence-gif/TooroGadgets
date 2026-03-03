@@ -108,6 +108,7 @@ export function Chat() {
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -115,6 +116,34 @@ export function Chat() {
   const [identity, setIdentity] = useState<{ name: string; phone: string } | null>(
     customer ? { name: customer.name, phone: customer.phone } : null
   );
+
+  // Handle keyboard appearance on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      // Visual Viewport API gives actual visible area dimensions
+      if (window.visualViewport) {
+        const windowHeight = window.innerHeight;
+        const visualViewportHeight = window.visualViewport.height;
+        const keyboardVisible = windowHeight - visualViewportHeight > 100;
+        
+        if (keyboardVisible) {
+          setKeyboardHeight(windowHeight - visualViewportHeight);
+          // Scroll to bottom when keyboard opens
+          setTimeout(() => scrollToBottom('auto'), 100);
+        } else {
+          setKeyboardHeight(0);
+        }
+      }
+    };
+
+    window.visualViewport?.addEventListener('resize', handleResize);
+    window.visualViewport?.addEventListener('scroll', handleResize);
+    
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+    };
+  }, []);
 
   // Scroll to bottom function
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
@@ -247,6 +276,13 @@ export function Chat() {
     }
   };
 
+  // Focus input when conversation loads
+  useEffect(() => {
+    if (conversationId && !initializing) {
+      inputRef.current?.focus();
+    }
+  }, [conversationId, initializing]);
+
   if (!identity) return <IdentityForm onSubmit={handleIdentitySubmit} />;
 
   if (initializing) {
@@ -262,7 +298,7 @@ export function Chat() {
 
   return (
     <div className="fixed inset-0 flex flex-col" style={{ background: 'var(--bg)' }}>
-      {/* Header - Now feels like app header */}
+      {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0"
            style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
         <div className="w-9 h-9 rounded-full flex items-center justify-center"
@@ -278,11 +314,12 @@ export function Chat() {
         </div>
       </div>
 
-      {/* Messages Container - Full bleed scrollable area */}
+      {/* Messages Container */}
       <div 
         ref={messagesContainerRef}
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto px-4 py-4"
+        style={{ paddingBottom: keyboardHeight > 0 ? '8px' : '16px' }}
       >
         <div className="space-y-3">
           {/* Welcome message */}
@@ -355,41 +392,55 @@ export function Chat() {
         </div>
       </div>
 
-      {/* Scroll to bottom button */}
+      {/* Scroll to bottom button - adjusted for keyboard */}
       {showScrollButton && (
         <button
           onClick={() => scrollToBottom('smooth')}
-          className="absolute right-4 bottom-20 rounded-full p-2 shadow-lg transition-all active:scale-90"
-          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          className="absolute right-4 rounded-full p-2 shadow-lg transition-all active:scale-90 z-10"
+          style={{ 
+            background: 'var(--surface)', 
+            border: '1px solid var(--border)',
+            bottom: keyboardHeight > 0 ? keyboardHeight + 16 : 80
+          }}
         >
           <ChevronDown size={20} style={{ color: 'var(--text2)' }} />
         </button>
       )}
 
-      {/* Input Area - Bottom anchored like real app */}
-      <div className="px-4 py-3 flex-shrink-0" style={{ background: 'var(--surface)', borderTop: '1px solid var(--border)' }}>
-        <div className="flex items-end gap-2">
-          <input
-            ref={inputRef}
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            placeholder="Type a message..."
-            className="flex-1 px-4 py-3 rounded-xl text-sm focus:outline-none"
-            style={{ background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)' }}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!inputText.trim() || loading}
-            className="w-11 h-11 rounded-xl flex items-center justify-center transition-all active:scale-90 flex-shrink-0"
-            style={{ background: inputText.trim() ? 'var(--accent)' : 'var(--surface2)' }}
-          >
-            {loading ? (
-              <Loader2 size={16} className="animate-spin" style={{ color: inputText.trim() ? 'white' : 'var(--text3)' }} />
-            ) : (
-              <Send size={16} style={{ color: inputText.trim() ? 'white' : 'var(--text3)' }} />
-            )}
-          </button>
+      {/* Input Area - Now with keyboard awareness */}
+      <div 
+        className="flex-shrink-0 transition-all duration-200"
+        style={{ 
+          background: 'var(--surface)', 
+          borderTop: '1px solid var(--border)',
+          transform: `translateY(${keyboardHeight > 0 ? 0 : 0}px)`,
+          paddingBottom: keyboardHeight > 0 ? '8px' : '12px'
+        }}
+      >
+        <div className="px-4 py-3">
+          <div className="flex items-end gap-2">
+            <input
+              ref={inputRef}
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+              placeholder="Type a message..."
+              className="flex-1 px-4 py-3 rounded-xl text-sm focus:outline-none"
+              style={{ background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)' }}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!inputText.trim() || loading}
+              className="w-11 h-11 rounded-xl flex items-center justify-center transition-all active:scale-90 flex-shrink-0"
+              style={{ background: inputText.trim() ? 'var(--accent)' : 'var(--surface2)' }}
+            >
+              {loading ? (
+                <Loader2 size={16} className="animate-spin" style={{ color: inputText.trim() ? 'white' : 'var(--text3)' }} />
+              ) : (
+                <Send size={16} style={{ color: inputText.trim() ? 'white' : 'var(--text3)' }} />
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
