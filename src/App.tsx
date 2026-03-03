@@ -50,6 +50,16 @@ export default function App() {
   }, [theme]);
 
   // ─── Hardware/browser back button support ────────────────────────────────────
+useEffect(() => {
+  const handleAddToCartEvent = (event: CustomEvent) => {
+    const { product, openCart } = event.detail;
+    handleAddToCart(product, openCart);
+  };
+
+  window.addEventListener('addToCart', handleAddToCartEvent as EventListener);
+  return () => window.removeEventListener('addToCart', handleAddToCartEvent as EventListener);
+}, []);
+  
   useEffect(() => {
     window.history.replaceState({ page: 'home' }, '');
   }, []);
