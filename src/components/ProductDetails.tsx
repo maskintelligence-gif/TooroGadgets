@@ -72,7 +72,7 @@ export function ProductDetails({ product, onClose, onAddToCart, onSelectProduct,
         <div className="flex flex-col lg:flex-row gap-12">
           {/* IMAGE SECTION - NOW FILLS CONTAINER FULLY */}
           <div className="w-full lg:w-1/2">
-            <div className="relative group bg-gray-50 dark:bg-gray-900 rounded-3xl overflow-hidden">
+            <div className="relative group bg-gray-50 dark:bg-gray-900 rounded-3xl overflow-hidden h-[500px]">
               <img 
                 src={product.image} 
                 alt={product.name} 
