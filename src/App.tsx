@@ -34,7 +34,7 @@ export default function App() {
   const [chatUnread, setChatUnread] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [returnToCart, setReturnToCart] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [showCheckout, setShowCheckout] = useState(false);
 
   // Live products from Supabase (falls back to hardcoded)
