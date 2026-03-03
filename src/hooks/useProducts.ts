@@ -19,39 +19,8 @@ function specsToArray(specs: unknown): string[] {
   return [];
 }
 
-function mapDbProduct(p: any): Product {
-  console.log('Raw product data from Supabase:', p);
-  console.log('Product images:', p.product_images);
-  
-  const images: { image_url: string; display_order: number }[] =
-    p.product_images || [];
-  const sortedImages = [...images].sort(
-    (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)
-  );
-  const imageUrls = sortedImages.map(img => img.image_url);
-  
-  console.log('Mapped image URLs:', imageUrls);
-  
-  return {
-    id: p.product_id,
-    name: p.product_name,
-    description: p.description || '',
-    price: p.price,
-    originalPrice: p.original_price ?? undefined,
-    category: (p.category as Category) || 'Accessories',
-    image: imageUrls[0] || 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?auto=format&fit=crop&q=80&w=800',
-    images: imageUrls.length > 1 ? imageUrls : undefined, // This will be undefined if only 1 image
-    rating: Number(p.rating) || 4.5,
-    reviews: p.review_count || 0,
-    isNew: p.created_at ? isNewProduct(p.created_at) : false,
-    isFeatured: p.featured || false,
-    specs: specsToArray(p.specs),
-    stock: p.stock_quantity ?? 0,
-  };
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-
+function mapDbProduct(p: any): Product {
   const images: { image_url: string; display_order: number }[] =
     p.product_images || [];
   const sortedImages = [...images].sort(
