@@ -70,13 +70,13 @@ export function ProductDetails({ product, onClose, onAddToCart, onSelectProduct,
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         <div className="flex flex-col lg:flex-row gap-12">
-          {/* FIXED IMAGE SECTION - Padding removed from container, added to image */}
+          {/* IMAGE SECTION - NOW FILLS CONTAINER FULLY */}
           <div className="w-full lg:w-1/2">
-            <div className="relative group bg-gray-50 dark:bg-gray-900 rounded-3xl flex items-center justify-center aspect-square lg:aspect-auto lg:h-[600px] overflow-hidden">
+            <div className="relative group bg-gray-50 dark:bg-gray-900 rounded-3xl overflow-hidden">
               <img 
                 src={product.image} 
                 alt={product.name} 
-                className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal cursor-zoom-in p-4 sm:p-6" 
+                className="w-full h-full object-cover cursor-zoom-in" 
                 onClick={() => setIsPreviewOpen(true)} 
                 referrerPolicy="no-referrer" 
               />
