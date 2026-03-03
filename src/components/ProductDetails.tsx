@@ -12,42 +12,6 @@ interface ProductDetailsProps {
 }
 
 export function ProductDetails({ product, onClose, onAddToCart, onSelectProduct, backLabel = 'Back to Catalog' }: ProductDetailsProps) {
-  // ============== DEBUGGING ==============
-  console.log('🔥🔥🔥 ProductDetails rendered with product:', product);
-  console.log('🔥🔥🔥 Product ID:', product?.id);
-  console.log('🔥🔥🔥 Product images property:', product?.images);
-  console.log('🔥🔥🔥 Product image property:', product?.image);
-  console.log('🔥🔥🔥 Does product have images array?', product?.images ? 'YES' : 'NO');
-  console.log('🔥🔥🔥 Images array length:', product?.images?.length || 0);
-  // ========================================
-
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [isAdded, setIsAdded] = useState(false);
-  const [isCopied, setIsCopied] = useState(false);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
-  // Safely create productImages array
-  let productImages: string[] = [];
-  
-  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
-    productImages = product.images;
-    console.log('✅ Using product.images array:', productImages);
-  } else if (product.image) {
-    productImages = [product.image];
-    console.log('✅ Using single product.image:', product.image);
-  } else {
-    productImages = ['https://images.unsplash.com/photo-1611532736597-de2d4265fba3?auto=format&fit=crop&q=80&w=800'];
-    console.log('⚠️ Using fallback image');
-  }
-
-  console.log('🎯 Final productImages used in gallery:', productImages);
-  console.log('🎯 Number of images to display:', productImages.length);
-
-  useEffect(() => { 
-    window.scrollTo(0, 0); 
-  }, [product.id]);
-
-export function ProductDetails({ product, onClose, onAddToCart, onSelectProduct, backLabel = 'Back to Catalog' }: ProductDetailsProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
